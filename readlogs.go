@@ -64,7 +64,7 @@ func main() {
   var last time.Time
   var retVal LogVal
   for  {
-      retVal = ReadLogs("test.log", 5, 3, last)
+      retVal = ReadLogs("test.log", 5, last)
       last = retVal.lastModified
       fmt.Printf("%s", retVal.log)
       time.Sleep(time.Duration(5) * 10)
