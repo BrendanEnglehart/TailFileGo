@@ -22,8 +22,8 @@ func check(e error) {
 
 
 
-// Tail the file for time seconds and length log entries
-func TailFile(log string, seconds int, length int, start_bytes int64) string {
+// Tail the file for time seconds
+func TailFile(log string, seconds int, start_bytes int64) string {
   time.Sleep(time.Duration(seconds) * time.Second )
   fileinfo, err1 :=  os.Stat(log)
   check (err1)
@@ -40,8 +40,8 @@ func TailFile(log string, seconds int, length int, start_bytes int64) string {
   return string(bRead[:bLength])
 }
 
-// read the logs from log, for time seconds and length entries, if last != lastmodified
-func ReadLogs(log string, seconds int, length int, last time.Time) LogVal{
+// read the logs from log, for time seconds, if last != lastmodified
+func ReadLogs(log string, seconds int, last time.Time) LogVal{
   file, err := os.Stat(log)
   check (err)
   bytes := file.Size()
@@ -49,7 +49,7 @@ func ReadLogs(log string, seconds int, length int, last time.Time) LogVal{
   ret := ""
   // if the file hasn't changes since we last looked at it
   if lastModified != last {
-    ret = TailFile(log, seconds, length, bytes)
+    ret = TailFile(log, seconds, bytes)
 
   }
 
