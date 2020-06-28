@@ -102,7 +102,7 @@ func ReadLogs(fileName string, seconds int, last time.Time) LogVal{
 
 // Main is just for making quick test cases, should be ignored
 func main() {
-
+  fmt.Printf("uncomment out the sample")
   /*
   var last time.Time
   var retVal LogVal
