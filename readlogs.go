@@ -8,8 +8,10 @@ import (
 
 
 type LogVal struct {
-   log  string
+   fileName     string
+   log          string
    lastModified time.Time
+   lastBytes    int64
 }
 
 
@@ -23,49 +25,87 @@ func check(e error) {
 
 
 // Tail the file for time seconds
-func TailFile(log string, seconds int, start_bytes int64) string {
+func TailFile(fileName string, seconds int, startBytes int64) LogVal {
+
   time.Sleep(time.Duration(seconds) * time.Second )
-  fileinfo, err1 :=  os.Stat(log)
+  fileinfo, err1 :=  os.Stat(fileName)
   check (err1)
-  end_bytes :=  fileinfo.Size()
-  file, err2 :=  os.Open(log)
+  lastModified := fileinfo.ModTime()
+  endBytes :=  fileinfo.Size()
+  file, err2 :=  os.Open(fileName)
   check (err2)
-  _, err3 := file.Seek(start_bytes, 0)
+  _, err3 := file.Seek(startBytes, 0)
   check (err3)
-  read_length := end_bytes - start_bytes
-  bRead := make([]byte, read_length)
+  readLength := endBytes - startBytes
+  bRead := make([]byte, readLength)
   bLength, err4 := file.Read(bRead)
   check (err4)
   file.Close()
-  return string(bRead[:bLength])
+  return LogVal {
+    fileName : fileName,
+    log : string(bRead[:bLength]),
+    lastModified : lastModified,
+    lastBytes : endBytes,
+  }
 }
 
-// read the logs from log, for time seconds, if last != lastmodified
-func ReadLogs(log string, seconds int, last time.Time) LogVal{
-  file, err := os.Stat(log)
+func ReadLogsContinously(fileName string, last time.Time, startBytes int64) LogVal {
+  file, err := os.Stat(fileName)
   check (err)
-  bytes := file.Size()
   lastModified := file.ModTime()
   ret := ""
+  seconds := 1
   // if the file hasn't changes since we last looked at it
   if lastModified != last {
-    ret = TailFile(log, seconds, bytes)
-
+    return TailFile(fileName, seconds, startBytes)
   }
 
   return LogVal{
+    fileName: fileName,
     log: ret,
+    lastModified: lastModified,
+    lastBytes: startBytes,
+  }
+}
+
+// TODO: this function needs a better name
+// This is just so the user can call ReadLogsContinously and pass in the value returned by it
+func ReadLogsContinouslyReusable(input LogVal) LogVal {
+    return ReadLogsContinously(input.fileName, input.lastModified, input.lastBytes)
+}
+
+
+
+
+// read the logs from log, for time seconds, if last != lastmodified
+func ReadLogs(fileName string, seconds int, last time.Time) LogVal{
+  file, err := os.Stat(fileName)
+  check (err)
+  bytes := file.Size()
+  lastModified := file.ModTime()
+
+  // if the file hasn't changes since we last looked at it
+  if lastModified != last {
+    return TailFile(fileName, seconds, bytes)
+  }
+
+  return LogVal{
+    fileName: fileName,
+    log: "",
     lastModified: lastModified,
   }
 }
 
 
+// Main is just for making quick test cases, should be ignored
 func main() {
   var last time.Time
   var retVal LogVal
+  retVal.lastModified = last
+  retVal.fileName = "test.log"
+  retVal.lastBytes = 0
   for  {
-      retVal = ReadLogs("test.log", 5, last)
-      last = retVal.lastModified
+      retVal = ReadLogsContinouslyReusable(retVal)
       fmt.Printf("%s", retVal.log)
       time.Sleep(time.Duration(5) * 10)
 
