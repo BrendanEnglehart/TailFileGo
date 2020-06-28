@@ -6,6 +6,14 @@ import (
   "fmt"
   )
 
+/*
+Struct: LogVal
+
+fileName is the name/path of the file the logs will originate from
+log is the value read from the file in fileName
+lastModified is the time that the file was modified
+lastBytes is the endpoint of the file the last time the file was read
+*/
 
 type LogVal struct {
    fileName     string
@@ -14,17 +22,14 @@ type LogVal struct {
    lastBytes    int64
 }
 
-
 func check(e error) {
     if e != nil {
         panic(e)
     }
 }
 
-
-
-
-// Tail the file for time seconds
+// Tail the file fileName, for time seconds, starting at startBytes
+// Returns a LogVal struct
 func TailFile(fileName string, seconds int, startBytes int64) LogVal {
 
   time.Sleep(time.Duration(seconds) * time.Second )
@@ -49,6 +54,7 @@ func TailFile(fileName string, seconds int, startBytes int64) LogVal {
   }
 }
 
+// this will give similar functionality to a tail -f
 func ReadLogsContinously(fileName string, last time.Time, startBytes int64) LogVal {
   file, err := os.Stat(fileName)
   check (err)
@@ -74,9 +80,6 @@ func ReadLogsContinouslyReusable(input LogVal) LogVal {
     return ReadLogsContinously(input.fileName, input.lastModified, input.lastBytes)
 }
 
-
-
-
 // read the logs from log, for time seconds, if last != lastmodified
 func ReadLogs(fileName string, seconds int, last time.Time) LogVal{
   file, err := os.Stat(fileName)
@@ -99,9 +102,12 @@ func ReadLogs(fileName string, seconds int, last time.Time) LogVal{
 
 // Main is just for making quick test cases, should be ignored
 func main() {
+
+  /*
   var last time.Time
   var retVal LogVal
   retVal.lastModified = last
+  // Should probably be using a full path for the logs
   retVal.fileName = "test.log"
   retVal.lastBytes = 0
   for  {
@@ -110,5 +116,5 @@ func main() {
       time.Sleep(time.Duration(5) * 10)
 
   }
-
+  */
 }
